@@ -1,0 +1,122 @@
+version: '3'
+
+services:
+    redis:
+      build: ./requirements/bonus/redis
+      container_name: redis
+      image: redis
+      ports:
+        - "6379:6379"
+      networks:
+        - mynetwork
+      restart: on-failure
+
+    adminer:
+      build: ./requirements/bonus/adminer
+      container_name: adminer
+      image: adminer
+      ports:
+        - "8080:8080"
+      networks:
+        - mynetwork
+      restart: on-failure
+
+    nginx:
+      build: ./requirements/nginx
+      container_name: nginx
+      image: nginx
+      ports:
+        - "443:443"
+      networks:
+        - mynetwork
+      restart: on-failure
+      volumes:
+        - wp:/var/www/html
+      depends_on:
+        - wordpress
+
+    mariadb:
+      build: ./requirements/mariadb
+      container_name: mariadb
+      image: mariadb
+      ports:
+        - "3306:3306"
+      networks:
+        - mynetwork
+      env_file: .env
+      restart: on-failure
+      volumes:
+        - db:/var/lib/mysql
+    
+    wordpress:
+      build: ./requirements/wordpress
+      container_name: wordpress
+      image: wordpress
+      ports:
+        - "9000:9000"
+      networks:
+        - mynetwork
+      env_file: .env
+      restart: on-failure
+      volumes:
+        - wp:/var/www/html
+      depends_on:
+        - mariadb
+        - redis
+
+    ftp:
+      build: ./requirements/bonus/ftp
+      container_name: ftp
+      image: ftp
+      ports:
+        - "21:21"
+        - "20:20"
+        - "40000-40005:40000-40005"
+      networks:
+        - mynetwork
+      restart: on-failure
+      volumes:
+        - wp:/home/kmouradi
+      env_file: .env
+
+    static_website:
+      build: ./requirements/bonus/static_website
+      container_name: static_website
+      image: static_website
+      ports:
+        - "8081:80"
+      networks:
+        - mynetwork
+      restart: on-failure
+
+    cadvisor:
+      build: ./requirements/bonus/cadvisor
+      image: cadvisor
+      container_name: cadvisor
+      ports:
+        - "1212:1212"
+      networks:
+        - mynetwork
+      volumes:
+        - "/:/rootfs:ro"
+        - "/var/run:/var/run:ro"
+        - "/sys:/sys:ro"
+        - "/var/lib/docker/:/var/lib/docker:ro"
+      restart: on-failure
+
+networks:
+    mynetwork:
+      driver: bridge
+
+#mac
+volumes:
+    wp:
+      driver_opts:
+        type: none
+        device: /home/kmouradi/data/wp
+        o: bind
+    db:
+      driver_opts:
+        type: none
+        device: /home/kmouradi/data/db
+        o: bind
