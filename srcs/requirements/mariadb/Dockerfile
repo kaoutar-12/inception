@@ -8,6 +8,4 @@ RUN apt-get update -y; \
     sed -i "s/127.0.0.1/0.0.0.0/" /etc/mysql/mariadb.conf.d/50-server.cnf; \
     chmod +x /script.sh;
 
-EXPOSE 3306
-
 ENTRYPOINT ["/bin/sh", "/script.sh"]
